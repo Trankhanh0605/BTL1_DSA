@@ -109,8 +109,53 @@ void ArrayList<T>:: clear() {
     delete[]data;
     count=0;
     capacity=10;
-    data=new T[capacity];
+    data=new T[capacity]; 
 }
+
+template<class T>
+T& ArrayList<T>:: get(int index) {
+    if (index<0||index>=count) throw out_of_range("Index is invalid!");
+    return data[index];
+}
+
+template<class T>
+void ArrayList<T>:: set(int index, T e) {
+    if (index<0||index>=count) throw out_of_range("Index is invalid!");
+    data[index]=e;
+}
+
+template<class T>
+int ArrayList<T>:: indexOf(T item) const {
+    for (int i=0; i<count; ++i) {
+        if (data[i]==item) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+template<class T>
+bool ArrayList<T>:: contains(T item) const {
+    for (int i=0; i<count; i++) {
+        if (data[i]==item) return true;
+    }
+    return false;
+}
+
+template<class T> 
+string ArrayList<T>:: toString(string (*item2str)(T&) = 0) const {
+stringstream ss;
+ss<<"[";
+for (int i=0; i<count; ++i) {
+    if (i>0) ss<<",";
+    if (item2str!=NULL) ss<<item2str(data[i]);
+    else ss<<data[i];
+}
+ss<<"]";
+return ss.str();
+}
+
+
 
 
 
