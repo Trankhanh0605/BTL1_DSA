@@ -155,18 +155,78 @@ ss<<"]";
 return ss.str();
 }
 
+template <class T> 
+typename ArrayList<T>:: Iterator ArrayList<T>::begin() {
+    return Iterator(this, 0);
+}
+
+template <class T> 
+typename ArrayList<T>:: Iterator ArrayList<T>::end() {
+    return Iterator(this, count);
+}
 
 
 
 
 // ----------------- Iterator of ArrayList Implementation -----------------
 template <class T>
-ArrayList<T>::Iterator::Iterator(ArrayList<T>* pList, int index) {
+ArrayList<T>::Iterator::Iterator (ArrayList<T>* pList, int index) {
     // TODO
+this->pList=pList;
+this->cursor=index;
 }
 
 // TODO: implement other methods of ArrayList::Iterator
+template <class T> 
+typename ArrayList<T>:: Iterator&  ArrayList<T>::Iterator::operator=(const Iterator& other) {
+if (this!=&other) {
+    this->cursor=other.cursor;
+    this->pList=other.pList;
+}
+}
 
+template<class T>
+T& ArrayList<T>::Iterator::operator*() {
+if (pList==NULL||cursor<0||cursor>=pList->count) throw out_of_range("Iterator is out of range!");
+return pList->data[cursor];
+} 
+
+template <class T>
+bool ArrayList<T> :: Iterator :: operator!=(const Iterator& other) const {
+    if ((this->pList!=other.pList) ||(this->cursor!=other.cursor)) return true;
+    return false;
+}
+
+template <class T> 
+typename ArrayList<T>:: Iterator& ArrayList<T>::Iterator::operator++() {
+if (cursor>=pList->count) throw out_of_range("Iterator cannot advance past end!");
+++cursor;
+return *this; 
+}
+
+template <class T> 
+typename ArrayList<T>:: Iterator ArrayList<T>::Iterator::operator++(int) {
+if (cursor>=pList->count) throw out_of_range("Iterator cannot advance past end!");
+Iterator temp=*this;
+++cursor;
+return temp;
+}
+
+template<class T>
+typename ArrayList<T>:: Iterator& ArrayList<T>:: Iterator::operator--() {
+    if (cursor==pList->count) cursor=pList->count-1;
+    if (cursor<0) throw out_of_range("Iterator cannot move before begin!") ;
+    --cursor;    
+    return *this;
+}
+
+template <class T> 
+typename ArrayList<T>:: Iterator ArrayList<T>:: Iterator::operator--(int) {
+if (cursor<0) throw out_of_range("Iterator cannot move before begin!") ;
+Iterator temp=*this;
+--cursor;
+return *this;
+}
 
 
 
@@ -178,14 +238,101 @@ ArrayList<T>::Iterator::Iterator(ArrayList<T>* pList, int index) {
 template <class T>
 SinglyLinkedList<T>::SinglyLinkedList() {
     // TODO
+    head=NULL;
+    tail=NULL;
+    count=0;
 }   
 
 template <class T>
 SinglyLinkedList<T>::~SinglyLinkedList() {
     // TODO
+    clear();
 }   
 
+
+
 // TODO: implement other methods of SinglyLinkedList
+template <class T>
+void SinglyLinkedList<T>::add(T e) {
+    Node* newNode=new Node(e);
+    if (empty()) head=tail=newNode;
+    else {
+        tail->next=newNode;
+        tail=newNode;
+    }
+    ++count;
+}
+
+template<class T>
+void SinglyLinkedList<T>::add(int index,T e) {
+if (index<0||index>count) throw out_of_range("Index is invalid!");
+else if (index==count) return this->add(e);
+if (index==0) {
+    Node* tmp=new Node (e);
+    tmp->next=this->head;
+    this->head=tmp;
+    this->count++;
+}
+else {
+    Node *temp=new Node(e);
+    Node *prev=this->head;
+    for (int i=0; i<idx-1; ++i) prev=prev->next;
+    temp->next=prev->next;
+    prev->next=temp;
+    this->count++;
+}
+}
+
+template<class T>
+T SinglyLinkedList<T>::removeAt(int index) {
+if (index<0||index>=count)  throw out_of_range("Index is invalid!");
+
+if (this->count==0) {
+    T value=this->head->data;
+    delete this->head;
+    this->head=this->tail=NULL;
+    this->count=0;
+    return value;
+}
+
+if (index==0) {
+    Node* temp=this->head;
+    this->head=this->head->next;
+    T value=temp->data;
+    temp->next=NULL;
+    delete temp;
+    this->count--;
+    return value;
+}
+
+if (index==count-1) {
+    Node* prev=head;
+    for (int i=0; i<idx-1;i++) prev=prev->next;
+    Node* temp=prev->next;
+    T value=temp->data;
+    prev->next=NULL;
+    this->tail=prev;
+    delete temp;
+    this->count--;
+    return value;
+}
+
+else {
+    Node*prev=head;
+    for (int i=0; i<index;++i) prev=prev->next;
+    Node*temp=prev->next;
+    prev->next=temp->next;
+    temp->next=NULL;
+    T value=temp->data;
+    delete temp;
+    this->count--;
+    return value;
+}
+}
+
+
+
+
 
 
 
