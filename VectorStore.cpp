@@ -330,6 +330,66 @@ else {
 }
 }
 
+template <class T>
+bool SinglyLinkedList<T>::removeItem (T item) {
+    if (empty()) return false;
+    if (head->data==item) {
+        Node* toDelete=head;
+        head=head->next;
+        if (head==NULL) tail=NULL;
+        delete toDelete;
+        --count;
+        return true; 
+    }
+    Node *prev=head;
+    Node *cur=head->next;
+    while (cur) {
+        if (cur->data==item) {
+            prev->next=cur->next;
+            if (cur==tail) tail=prev;
+            delete cur;
+            --count;
+            return true;
+        }
+        prev=cur;
+        cur=cur->next;
+    }
+    return false;
+}
+
+template <class T>
+bool SinglyLinkedList<T>::empty() const {
+if (count==0) return true;
+else return false;
+}
+
+template <class T>
+int SinglyLinkedList<T>:: size() const {
+    return count;
+}
+
+template <class T> 
+void SinglyLinkedList<T>:: clear() {
+Node *cur=head;
+while (cur) {
+    Node *nextNode=cur->next;
+    delete cur;
+    cur=nextNode;
+}
+head=tail=NULL;
+count=0;
+}
+
+template <class T>
+T& ArrayList<T>:: get(int index) {
+    if (index<0||index>=count) throw out_of_range("Index is invalid!");
+    Node * cur=head;
+    for (int i=0; i<index; ++i) {
+        cur=cur->next;
+    }
+
+
+}
 
 
 
