@@ -381,15 +381,57 @@ count=0;
 }
 
 template <class T>
-T& ArrayList<T>:: get(int index) {
+T& SinglyLinkedList<T>:: get(int index) {
     if (index<0||index>=count) throw out_of_range("Index is invalid!");
-    Node * cur=head;
+    Node *cur=head; 
     for (int i=0; i<index; ++i) {
         cur=cur->next;
     }
-
-
+    return cur->data;
 }
+
+template <class T> 
+int SinglyLinkedList<T>:: indexOf(T item) const {
+    Node * cur=head;
+    int idx;
+    while (cur!=nullptr) {
+        if (cur->data==item) return idx;
+        cur=cur->next;
+        ++idx;
+    }
+    return -1;
+}
+
+template <class T>
+bool SinglyLinkedList<T>:: contains(T item) const{
+    if (indexOf(item) !=-1) return true;
+    else return false;
+}
+
+template <class T>
+string SinglyLinkedList<T>:: toString(string (*item2str)(T&) = 0) const {
+    stringstream ss;
+    Node *cur=head;
+    while (cur) {
+        if (item2str) ss<<"[" <<item2str(cur->data)<<"]";
+        else ss<<"["<<cur->data<<"]";
+        if (cur->next) ss<<"->";
+        cur=cur->next;
+    }
+    return ss.str();
+}
+
+template<class T>
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>:: begin() {
+    return Iterator(head);
+}
+
+template <class T>
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::end() {
+    return Iterator(nullptr);
+}
+
+
 
 
 
@@ -400,9 +442,48 @@ T& ArrayList<T>:: get(int index) {
 template <class T>
 SinglyLinkedList<T>::Iterator::Iterator(Node* node) {
     // TODO
+    current=node;
 }   
 
+
 // TODO: implement other methods of SinglyLinkedList::Iterator
+template<class T>
+typename SinglyLinkedList<T>::Iterator&  SinglyLinkedList<T>::Iterator::operator=(const Iterator& other) {
+if (this!=other) current=other.current;
+return *this;
+}
+
+template<class T>
+T& SinglyLinkedList<T>::Iterator::operator*(){
+if (current==nullptr) throw out_of_range("Iterator is out of range!");
+return current->data;
+}
+
+template <class T>
+bool SinglyLinkedList<T>:: Iterator:: operator!=(const Iterator& other) const {
+if (current!=other.current) return true;
+else return false;
+}
+
+template<class T>
+typename SinglyLinkedList<T>::Iterator& SinglyLinkedList<T>::Iterator::operator++() {
+if (current == nullptr) throw std::out_of_range("Iterator cannot advance past end!");
+current=current->next;
+return *this;
+}
+
+template <class T>
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::Iterator:: operator++(int){
+if (current == nullptr) throw std::out_of_range("Iterator cannot advance past end!");
+Iterator temp=*this;
+++(*this);
+return temp;
+}
+
+
+
+
+
 
 
 
