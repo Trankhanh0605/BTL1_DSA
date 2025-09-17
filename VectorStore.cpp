@@ -113,7 +113,7 @@ void ArrayList<T>:: clear() {
 }
 
 template<class T>
-T& ArrayList<T>:: get(int index) {
+T& ArrayList<T>:: get(int index) const {
     if (index<0||index>=count) throw out_of_range("Index is invalid!");
     return data[index];
 }
@@ -156,12 +156,12 @@ return ss.str();
 }
 
 template <class T> 
-typename ArrayList<T>:: Iterator ArrayList<T>::begin() {
+typename ArrayList<T>:: Iterator ArrayList<T>::begin() const {
     return Iterator(this, 0);
 }
 
 template <class T> 
-typename ArrayList<T>:: Iterator ArrayList<T>::end() {
+typename ArrayList<T>:: Iterator ArrayList<T>::end() const {
     return Iterator(this, count);
 }
 
@@ -422,12 +422,12 @@ string SinglyLinkedList<T>:: toString(string (*item2str)(T&) = 0) const {
 }
 
 template<class T>
-typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>:: begin() {
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>:: begin() const {
     return Iterator(head);
 }
 
 template <class T>
-typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::end() {
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::end() const {
     return Iterator(nullptr);
 }
 
@@ -491,13 +491,194 @@ return temp;
 
 VectorStore::VectorStore(int dimension = 512, EmbedFn embeddingFunction = nullptr) {
     // TODO
+count=0;
+this->dimension=dimension;
+this->embeddingFunction=embeddingFunction;
 }
 
 VectorStore::~VectorStore() {
     // TODO
+    clear();
 }
 
 // TODO: implement other methods of VectorStore
+int VectorStore::size()  const {
+return count;
+}
+
+bool VectorStore::empty() const {
+    if (count==0) return true;
+    else return false;
+}
+
+void VectorStore:: clear() {
+    for (int i=0; i<records.size(); ++i) {
+        VectorRecord *rec=records.get(i);
+        delete rec->vector;
+        delete rec;
+    }
+    records.clear();
+    count=0;
+}
+
+SinglyLinkedList<float>* VectorStore:: preprocessing(string rawText) {
+    SinglyLinkedList<float> * vec=embeddingFunction(rawText);
+    int vec_size=vec->size();
+    if (vec_size >dimension) {
+        while (vec->size()>dimension) {
+            vec->removeAt(vec->size()-1);
+        }
+    }
+    else if (vec_size<dimension) {
+        for (int i=vec_size; i<dimension; ++i) vec->add(0.0f);
+    }
+    return vec;
+}
+
+void VectorStore:: addText(string rawText) {
+SinglyLinkedList<float>* vec= preprocessing (rawText);
+int id;
+if (count>0) id=records.get(records.size()-1)->id+1;
+else id=0;
+VectorRecord *rec=new VectorRecord(id, rawText, vec);
+rec->rawLength=rawText.length();
+records.add(rec);
+++count;
+}
+
+SinglyLinkedList<float>& VectorStore:: getVector(int index) {
+if (index<0||index>=records.size()) throw out_of_range("Index is invalid!");
+return *(records.get(index)->vector);
+}
+
+string VectorStore:: getRawText(int index) const {
+if (index < 0 || index >= records.size()) throw out_of_range("Index is invalid!");
+return records.get(index)->rawText;
+}
+
+int VectorStore:: getId(int index) const  {
+    if (index < 0 || index >= records.size()) throw out_of_range("Index is invalid!");
+    return records.get(index)->id;
+}
+
+bool VectorStore:: removeAt(int index) {
+if (index < 0 || index >= records.size()) throw out_of_range("Index is invalid!");
+VectorRecord *rec=records.get(index);
+delete rec->vector;
+delete rec;
+records.removeAt(index);
+--count;
+return true;
+}
+
+bool VectorStore:: updateText(int index, string newRawText) {
+    if (index < 0 || index >= records.size()) throw out_of_range("Index is invalid!");
+    VectorRecord *rec=records.get(index);
+    delete rec->vector;
+    rec->vector=preprocessing(newRawText);
+    rec->rawText=newRawText;
+    rec->rawLength=newRawText.length();
+    return true;
+}
+
+void VectorStore:: setEmbeddingFunction(EmbedFn newEmbeddingFunction) {
+embeddingFunction=newEmbeddingFunction;
+}
+
+void VectorStore:: forEach(void (*action)(SinglyLinkedList<float>&, int, string&)) {
+int size=records.size();
+for (int i=0; i<size; ++i) {
+    VectorRecord *rec=records.get(i);
+    action(*(rec->vector),rec->id,rec->rawText);
+}
+}
+
+double VectorStore::cosineSimilarity( const SinglyLinkedList<float>& v1, const SinglyLinkedList<float>& v2) const {
+double cos;
+double dot=0; 
+double normA=0;
+double normB=0;
+auto it1=v1.begin();
+auto it2=v2.begin();
+while ((it1!=v1.end()) && (it2!=v2.end())) {
+    double a=*it1;
+    double b=*it2;
+    dot+=a*b;
+    normA+=a*a;
+    normB+=b*b;
+    ++it1; 
+    ++it2;
+}
+if ((normA==0)||(normB==0)) return 0.0;
+else cos=dot/(sqrt(normA)*sqrt(normB));
+return cos;
+}
+ 
+double VectorStore:: l1Distance( const SinglyLinkedList<float>& v1, const  SinglyLinkedList<float>& v2) const { //khoang cach manhattan
+double result;
+auto it1=v1.begin();
+auto it2=v2.begin();
+while ((it1!=v1.end()) && (it2!=v2.end())) {
+    result+=fabs(*it1-*it2);
+    ++it1;
+    ++it2;
+}
+return result;
+}
+
+double VectorStore:: l2Distance( const SinglyLinkedList<float>& v1, const SinglyLinkedList<float>& v2) const {
+double result;
+double temp;
+double d; 
+auto it1=v1.begin();
+auto it2=v2.begin();
+while ((it1!=v1.end()) && (it2!=v2.end())) {
+    temp=*it1-*it2;
+    d+=temp*temp;
+    ++it1;
+    ++it2;
+}
+result=sqrt(d);
+return result;
+}
+
+int VectorStore::findNearest( const SinglyLinkedList<float>& query, const string& metric) const {
+    if (empty()==true) return -1;
+    int idxBest=-1;
+    double bestVal;
+    if (metric=="cosine") bestVal=-1e9;
+    else bestVal=1e9;
+    int size=records.size();
+    for (int i=0; i<size;++i) {
+        double val=0;
+        if (metric=="cosine") {
+            val=cosineSimilarity(query, *(records.get(i)->vector));
+            if (val>bestVal) {
+                val=bestVal;
+                idxBest=i;
+            }
+        }
+        else if (metric=="euclidean") {
+            val=l2Distance(query, *(records.get(i)->vector));
+            if (val<bestVal) {
+                val=bestVal;
+                idxBest=i;
+            }
+        }
+        else if (metric=="manhattan") {
+            val=l1Distance(query,*(records.get(i)->vector));
+            if (val<bestVal) {
+                val=bestVal;
+                idxBest=i;
+            }
+        }
+        else throw invalid_metric();
+    }
+    return idxBest;
+}
+
+
+
 
 
 // Explicit template instantiation for char, string, int, double, float, and Point

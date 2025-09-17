@@ -34,14 +34,14 @@ public:
     bool empty() const;
     int size() const;
     void clear();
-    T& get(int index);
+    T& get(int index) const; //them const vao cuoi 
     void set(int index, T e);
     int indexOf(T item) const;
     bool contains(T item) const;
     string toString(string (*item2str)(T&) = 0) const;
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin() const; //thêm const vào cả 2 iterator 
+    Iterator end() const;
 
     // Inner class Iterator
     class Iterator {
@@ -107,8 +107,8 @@ public:
     bool contains(T item) const;
     string toString(string (*item2str)(T&) = 0) const;
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin()const; //thêm const vào cả 2 Iterator 
+    Iterator end()const;
 
     // Inner class Iterator
     class Iterator {
@@ -135,8 +135,8 @@ class VectorStore {
     #ifdef TESTING
         friend class TestHelper;
     #endif
-public:
-    struct VectorRecord {
+public:    
+struct VectorRecord {
         int id;
         string rawText;
         int rawLength;
@@ -154,32 +154,32 @@ private:
     EmbedFn embeddingFunction;
 
 public:
-    VectorStore(int dimension = 512, EmbedFn embeddingFunction = nullptr);
-    ~VectorStore();
+    VectorStore(int dimension = 512, EmbedFn embeddingFunction = nullptr); //checked
+    ~VectorStore(); //checked
     int  size() const;
     bool empty() const;
     void clear();    
 
-    SinglyLinkedList<float>* preprocessing(string rawText);
+    SinglyLinkedList<float>* preprocessing(string rawText); 
 
     void addText(string rawText);
     SinglyLinkedList<float>& getVector(int index);
-    string getRawText(int index) const;
-    int getId(int index) const;
+    string getRawText(int index) const; //bỏ const
+    int getId(int index) const ; //bỏ const
     bool removeAt(int index);
     bool updateText(int index, string newRawText);
     void setEmbeddingFunction(EmbedFn newEmbeddingFunction);
 
     void forEach(void (*action)(SinglyLinkedList<float>&, int, string&));
 
-    double cosineSimilarity(const SinglyLinkedList<float>& v1,
-                            const SinglyLinkedList<float>& v2) const;
-    double l1Distance(const SinglyLinkedList<float>& v1,
-                      const SinglyLinkedList<float>& v2) const;
-    double l2Distance(const SinglyLinkedList<float>& v1,
-                      const SinglyLinkedList<float>& v2) const;
+    double cosineSimilarity( const SinglyLinkedList<float>& v1,
+                            const SinglyLinkedList<float>& v2) const; //bỏ const ở biến --> phục hồi lại 
+    double l1Distance( const SinglyLinkedList<float>& v1,
+                      const SinglyLinkedList<float>& v2) const; //bỏ const ở biến 
+    double l2Distance( const SinglyLinkedList<float>& v1,
+                      const SinglyLinkedList<float>& v2) const; //bỏ const ở biến
 
-    int findNearest(const SinglyLinkedList<float>& query, const string& metric = "cosine") const;
+    int findNearest( const SinglyLinkedList<float>& query, const string& metric = "cosine") const; //bỏ const ở biến
 
     int* topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric = "cosine") const;
 };
