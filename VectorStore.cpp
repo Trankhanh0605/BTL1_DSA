@@ -1,5 +1,40 @@
 #include "VectorStore.h"
 
+//support function
+template <class T>
+void swap (T& a, T& b) {
+T temp = a;
+a = b;
+b = temp;
+}
+
+template<class T>
+int partition(ArrayList<T>& list, int low, int high, bool (*compare)(const T&, const T&)) {
+    T pivot = list.get(high);
+    int i = low - 1;
+    for (int j = low; j < high; ++j) {
+        if (compare(list.get(j), pivot)) {
+            i++;
+            swap(list.get(i), list.get(j));
+        }
+    }
+    swap(list.get(i + 1), list.get(high));
+    return i + 1;
+}
+
+template <class T>
+void quickSort(ArrayList<T>& list, int low, int high, bool (*compare)(const T&, const T&)) {
+    if (low < high) {
+        int pi = partition(list, low, high, compare);
+        quickSort(list, low, pi - 1, compare);
+        quickSort(list, pi + 1, high, compare);
+    }
+}
+
+
+
+
+
 // ----------------- ArrayList Implementation -----------------
 template <class T>
 void ArrayList<T>::ensureCapacity(int cap) {
@@ -167,7 +202,6 @@ typename ArrayList<T>:: Iterator ArrayList<T>::end() const {
 
 
 
-
 // ----------------- Iterator of ArrayList Implementation -----------------
 template <class T>
 ArrayList<T>::Iterator::Iterator (ArrayList<T>* pList, int index) {
@@ -215,17 +249,17 @@ return temp;
 template<class T>
 typename ArrayList<T>:: Iterator& ArrayList<T>:: Iterator::operator--() {
     if (cursor==pList->count) cursor=pList->count-1;
-    if (cursor<0) throw out_of_range("Iterator cannot move before begin!") ;
+    if (cursor<=0) throw out_of_range("Iterator cannot move before begin!") ;
     --cursor;    
     return *this;
 }
 
 template <class T> 
 typename ArrayList<T>:: Iterator ArrayList<T>:: Iterator::operator--(int) {
-if (cursor<0) throw out_of_range("Iterator cannot move before begin!") ;
+if (cursor<=0) throw out_of_range("Iterator cannot move before begin!") ;
 Iterator temp=*this;
 --cursor;
-return *this;
+return temp;
 }
 
 
@@ -276,7 +310,7 @@ if (index==0) {
 else {
     Node *temp=new Node(e);
     Node *prev=this->head;
-    for (int i=0; i<idx-1; ++i) prev=prev->next;
+    for (int i=0; i<index-1; ++i) prev=prev->next;
     temp->next=prev->next;
     prev->next=temp;
     this->count++;
@@ -307,7 +341,7 @@ if (index==0) {
 
 if (index==count-1) {
     Node* prev=head;
-    for (int i=0; i<idx-1;i++) prev=prev->next;
+    for (int i=0; i<index-1;i++) prev=prev->next;
     Node* temp=prev->next;
     T value=temp->data;
     prev->next=NULL;
@@ -393,7 +427,7 @@ T& SinglyLinkedList<T>:: get(int index) {
 template <class T> 
 int SinglyLinkedList<T>:: indexOf(T item) const {
     Node * cur=head;
-    int idx;
+    int idx=0;
     while (cur!=nullptr) {
         if (cur->data==item) return idx;
         cur=cur->next;
@@ -482,6 +516,13 @@ return temp;
 
 
 
+
+//-------------VectorRecord Constructor-----------------
+VectorStore::VectorRecord::VectorRecord(int id, const string& rawText, SinglyLinkedList<float>* vector) {
+this->id=id;
+this->rawText=rawText;
+this->vector=vector;
+}
 
 
 
@@ -654,27 +695,49 @@ int VectorStore::findNearest( const SinglyLinkedList<float>& query, const string
         if (metric=="cosine") {
             val=cosineSimilarity(query, *(records.get(i)->vector));
             if (val>bestVal) {
-                val=bestVal;
+                bestVal=val;
                 idxBest=i;
             }
         }
         else if (metric=="euclidean") {
             val=l2Distance(query, *(records.get(i)->vector));
             if (val<bestVal) {
-                val=bestVal;
+                bestVal=val;
                 idxBest=i;
             }
         }
         else if (metric=="manhattan") {
             val=l1Distance(query,*(records.get(i)->vector));
             if (val<bestVal) {
-                val=bestVal;
+                bestVal=val;
                 idxBest=i;
             }
         }
         else throw invalid_metric();
     }
     return idxBest;
+}
+
+int* VectorStore:: topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric = "cosine") const {
+int n = records.size();
+if (!(metric == "cosine" || metric == "euclidean" || metric == "manhattan")) throw invalid_metric();
+if (k <= 0 || k > n) throw invalid_k_value();
+using Pair = pair<int,double>; // index, score
+ArrayList<Pair> vals;
+for (int i = 0; i < n; ++i) {
+    double s = 0;
+    if (metric == "cosine") s = cosineSimilarity(query, *(records.get(i)->vector));
+    else if (metric == "euclidean") s = l2Distance(query, *(records.get(i)->vector));
+    else if (metric == "manhattan") s = l1Distance(query, *(records.get(i)->vector));
+    vals.add(Pair(i,s));
+    }
+if (metric=="cosine") quickSort(vals, 0, vals.size() - 1, compareCosine);
+else quickSort(vals, 0, vals.size() - 1, compareDistance);
+int *res=new int [k];
+for (int i=0; i<k; ++i) {
+    res[i]=vals.get(i).first;
+}
+return res;
 }
 
 

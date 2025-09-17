@@ -184,4 +184,15 @@ public:
     int* topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric = "cosine") const;
 };
 
+
+//supplement 
+bool compareCosine(const std::pair<int,double>& a, const std::pair<int,double>& b) {
+    return a.second > b.second;
+} 
+
+bool compareDistance(const std::pair<int,double>& a, const std::pair<int,double>& b) {
+    return a.second < b.second;
+}
+
+
 #endif // VECTORSTORE_H
